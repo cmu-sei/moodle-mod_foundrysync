@@ -45,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: 2020101401 #${{ env.artifact_version }}
-          release_name: tool_foundrysync_2020101401 #${{ env.artifact_name }}
+          tag_name: ${{ env.artifact_version }}
+          release_name: ${{ env.artifact_name }}
           draft: false
           prerelease: false
