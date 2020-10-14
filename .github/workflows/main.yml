@@ -33,7 +33,11 @@ jobs:
               let NEWVERS=(OLDVERS + 1)
               NEWVERSION=$OLDDATE`printf %02d $NEWVERS`
           fi
-      
+          PREVIOUSVERSION=$(grep "plugin->version" foundrysync/version.php | sed -e "s/.*= \(.*\);.*/\1/")
+          sed -i "s#$PREVIOUSVERSION#$NEWVERSION#" foundrysync/version.php
+          zip -r tool_foundrysync_$NEWVERSION.zip foundrysync/ -x  "foundrysync/*.git*"
+          echo ::set-env name=artifact_version::$NEWVERSION
+          echo ::set-env name=artifact_name::mod_groupquiz_$NEWVERSION      
 
       - name: Create Release
         id: create_release
