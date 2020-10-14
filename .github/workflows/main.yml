@@ -13,6 +13,13 @@ jobs:
         with:
           path: './foundrysync'
 
+      - id: foundrysync
+        uses: pozetroninc/github-action-get-latest-release@v0.5.0
+        with:
+          owner: sei-mmcdonough
+          repo: moodle-mod_foundrysync
+          excludes: prerelease, draft
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
