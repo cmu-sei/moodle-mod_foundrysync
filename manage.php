@@ -48,7 +48,6 @@ $status = optional_param('status', 0, PARAM_BOOL);
 $endpoint = optional_param('endpoint', '', PARAM_URL);
 $issuerid = optional_param('issuerid', '', PARAM_INT);
 $interval = optional_param('interval', '', PARAM_RAW);
-$course = optional_param('course', '', PARAM_INT);
 
 $PAGE->set_url($manageurl);
 $PAGE->set_pagelayout('admin');
@@ -70,10 +69,6 @@ if (!empty($action) && $action == 'changestatus') {
     if (!empty($action) && (!empty($interval))) {
         set_config('interval', $interval, 'tool_foundrysync');
     }
-    /* sync course */
-    if (!empty($action) && (!empty($course))) {
-        set_config('course', $course, 'tool_foundrysync');
-    }
     /* redirect and update */
     redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
 }
@@ -85,7 +80,6 @@ $status = get_config('tool_foundrysync', 'enable');
 $endpoint = get_config('tool_foundrysync', 'endpoint');
 $issuerid = get_config('tool_foundrysync', 'issuerid');
 $interval = get_config('tool_foundrysync', 'interval');
-$course = get_config('tool_foundrysync', 'course');
 
 echo "<br>\n";
 
@@ -124,8 +118,6 @@ $output .= "<br>";
 /* interval */
 $output .= html_writer::tag('span', "Enter the interval to query, in minutes<br>");
 $output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'interval', 'value'=>$interval));
-$output .= html_writer::tag('span', "Enter the course ID you would like to sync as a foundry playlist<br>");
-$output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'course', 'value'=>$course));
 /* add submit button */
 $output .= html_writer::empty_tag('input', array('type' => 'submit', 'class' => 'btn btn-primary', 'value' =>"Submit"));
 $output .= html_writer::end_tag('form');

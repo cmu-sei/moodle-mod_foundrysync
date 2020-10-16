@@ -78,11 +78,7 @@ class check_content extends \core\task\scheduled_task {
         if (!$this->interval) {
             $this->interval = 15;
         }
-        $this->course = get_config('tool_foundrysync', 'course');
-        if (!$this->course) {
-            $this->course = 0;
-        }
-
+        $this->course = 0;
     }
 
     /* http://php.net/manual/en/function.com-create-guid.php */
