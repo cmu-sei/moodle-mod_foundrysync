@@ -235,7 +235,7 @@ foreach ($issuer_settings as $key) {
         if ($key === 'showonloginpage' || $key === 'requireconfirmation') {
             $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
-        if ($value != $data->$key) {
+        if (!isset($data->$key) || $value != $data->$key) {
                 $updated = true;
         }
         $data->$key = $value;
