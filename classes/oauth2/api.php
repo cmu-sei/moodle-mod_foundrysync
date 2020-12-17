@@ -49,13 +49,18 @@ class api extends \core\oauth2\api {
     }
 
     public static function guess_image($data) {
-        if (empty($data->image) && !empty($data->baseurl)) {
-            $baseurl = parse_url($data->baseurl);
-            $imageurl = $baseurl['scheme'] . '://' . $baseurl['host'] . '/favicon.ico';
-            $data->image = $imageurl;
+        // check if image is set
+        if (empty($data->image))
+        {
+            // image isn't set, see if baseurl is set to guess at URL
+            if (!empty($data->baseurl)) {
+                $baseurl = parse_url($data->baseurl);
+                $imageurl = $baseurl['scheme'] . '://' . $baseurl['host'] . '/favicon.ico';
+                $data->image = $imageurl;
+            } else {
+                // no baseURL, nothing to go by, just use localhost IP
+                $imageurl = 'http://127.0.0.1/favicon.ico';
+            }
         }
-        return $data->image;
     }
-
-
 }
