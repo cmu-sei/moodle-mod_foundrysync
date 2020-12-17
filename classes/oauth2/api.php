@@ -48,5 +48,14 @@ class api extends \core\oauth2\api {
         return $issuer->delete();
     }
 
+    public static function guess_image($data) {
+        if (empty($data->image) && !empty($data->baseurl)) {
+            $baseurl = parse_url($data->baseurl);
+            $imageurl = $baseurl['scheme'] . '://' . $baseurl['host'] . '/favicon.ico';
+            $data->image = $imageurl;
+        }
+        return $data->image;
+    }
+
 
 }

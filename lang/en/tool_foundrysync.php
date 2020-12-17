@@ -49,3 +49,6 @@ $string['pluginname'] = 'Foundry Content Sync';
 $string['taskcheckcontent'] = 'Sync content to Foundry';
 $string['manage'] = 'Manage foundry sync';
 
+// cli
+$string['manageoauth2'] = 'Manage OAUTH2 Settings';
+
