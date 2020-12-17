@@ -36,8 +36,8 @@ jobs:
           PREVIOUSVERSION=$(grep "plugin->version" foundrysync/version.php | sed -e "s/.*= \(.*\);.*/\1/")
           sed -i "s#$PREVIOUSVERSION#$NEWVERSION#" foundrysync/version.php
           zip -r tool_foundrysync_$NEWVERSION.zip foundrysync/ -x  "foundrysync/*.git*"
-          echo ::set-env name=artifact_version::$NEWVERSION
-          echo ::set-env name=artifact_name::tool_foundrysync_$NEWVERSION      
+          echo "artifact_version::$NEWVERSION" >> $GITHUB_ENV
+          echo "artifact_name::tool_foundrysync_$NEWVERSION" >> $GITHUB_ENV    
 
       - name: Create Release
         id: create_release
