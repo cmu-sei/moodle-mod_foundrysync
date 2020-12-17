@@ -95,8 +95,7 @@ $issuer_settings = array(
     'showonloginpage',
     'requireconfirmation',
     'loginparams',
-    'loginparamsoffline',
-    'alloweddomains'
+    'loginparamsoffline'
 );
 
 // create an array of required keys for data
