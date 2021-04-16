@@ -15,12 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * Language file.
  *
- * @package    tool
- * @subpackage foundrysync
- * @copyright  2020 Carnegie Mellon University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   tool_foundrysync
+ * @copyright 2020 Carnegie Mellon University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
@@ -34,15 +33,23 @@ This Software includes and/or makes use of the following Third-Party Software su
 DM20-0198
  */
 
+// This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2020050804; // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires = 2018050800; // Requires this Moodle version
-$plugin->component = 'tool_foundrysync'; // Full name of the plugin (used for diagnostics)
+// The name of the second tab in the theme settings.
+$string['advancedsettings'] = 'Advanced settings';
+$string['choosereadme'] = 'This tool is used to sync moodle content to foundry';
+// Name of the settings pages.
+$string['configtitle'] = 'Foundry settings';
+// Name of the first settings tab.
+$string['generalsettings'] = 'General settings';
+// The name of our plugin.
+$string['pluginname'] = 'Foundry Content Sync';
 
-$plugin->maturity = MATURITY_BETA; // this version's maturity level
+$string['taskcheckcontent'] = 'Sync content to Foundry';
+$string['taskadduser'] = 'Sync users from the Identity Server';
+$string['manage'] = 'Manage foundry sync';
 
-//$plugin->dependencies = [
-//    'local_metadata' => ANY_VERSION
-//];
+// cli
+$string['manageoauth2'] = 'Manage OAUTH2 Settings';
 

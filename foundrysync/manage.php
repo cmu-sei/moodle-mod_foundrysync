@@ -44,7 +44,8 @@ require_login();
 
 $manageurl = new moodle_url("/admin/tool/foundrysync/manage.php");
 $action = optional_param('action', '', PARAM_ALPHA);
-$status = optional_param('status', 0, PARAM_BOOL);
+$contentsyncstatus = optional_param('contentsyncstatus', 0, PARAM_BOOL);
+$usersyncstatus = optional_param('usersyncstatus', 0, PARAM_BOOL);
 $endpoint = optional_param('endpoint', '', PARAM_URL);
 $issuerid = optional_param('issuerid', '', PARAM_INT);
 $interval = optional_param('interval', '', PARAM_RAW);
@@ -54,9 +55,9 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title("Manage Foundry Sync");
 $PAGE->set_heading("Foundry Sync Settings");
 
-// toggle status of the plugin.
-if (!empty($action) && $action == 'changestatus') {
-    set_config('enable', $status, 'tool_foundrysync');
+// toggle status of the user sync.
+if (!empty($action) && $action == 'changeusersyncstatus') {
+    set_config('enableusersync', $usersyncstatus, 'tool_foundrysync');
     redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
 } else if (!empty($action) && $action == 'changevalues') {
     if (!empty($action) && (!empty($endpoint))) {
@@ -73,26 +74,61 @@ if (!empty($action) && $action == 'changestatus') {
     redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
 }
 
+// toggle status of the content sync.
+if (!empty($action) && $action == 'changecontentsyncstatus') {
+    set_config('enablecontentsync', $contentsyncstatus, 'tool_foundrysync');
+    redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
+} else if (!empty($action) && $action == 'changevalues') {
+    if (!empty($action) && (!empty($endpoint))) {
+        set_config('endpoint', $endpoint, 'tool_foundrysync');
+    }
+    if (!empty($action) && (!empty($issuerid))) {
+        set_config('issuerid', $issuerid, 'tool_foundrysync');
+    }
+    /* query interval */
+    if (!empty($action) && (!empty($interval))) {
+        set_config('interval', $interval, 'tool_foundrysync');
+    }
+    /* redirect and update */
+    redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
+}
 
 echo $OUTPUT->header();
 
-$status = get_config('tool_foundrysync', 'enable');
+$contentsyncstatus = get_config('tool_foundrysync', 'enablecontentsync');
+$usersyncstatus = get_config('tool_foundrysync', 'enableusersync');
 $endpoint = get_config('tool_foundrysync', 'endpoint');
 $issuerid = get_config('tool_foundrysync', 'issuerid');
 $interval = get_config('tool_foundrysync', 'interval');
 
 echo "<br>\n";
 
-// create link to toggle plugin
-if ($status == 1) {
-    $statustext = "Disable Plugin";
+// create link to toggle user sync
+if ($usersyncstatus == 1) {
+    $statustext = "Disable User Sync";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
-                array('action' => 'changestatus', 'status' => 0));
+                array('action' => 'changeusersyncstatus', 'usersyncstatus' => 0));
     echo ' ' . html_writer::link($url,  $statustext);
-} else if ($status == 0) {
-    $statustext = "Enable Plugin";
+} else if ($usersyncstatus == 0) {
+    $statustext = "Enable User Sync";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
-                array('action' => 'changestatus', 'status' => 1));
+                array('action' => 'changeusersyncstatus', 'usersyncstatus' => 1));
+    echo ' ' . html_writer::link($url,  $statustext);
+}
+
+echo "<br>\n";
+echo "<hr>\n";
+
+// create link to toggle content sync
+if ($contentsyncstatus == 1) {
+    $statustext = "Disable Content Sync";
+    $url = new moodle_url("/admin/tool/foundrysync/manage.php",
+                array('action' => 'changecontentsyncstatus', 'contentsyncstatus' => 0));
+    echo ' ' . html_writer::link($url,  $statustext);
+} else if ($contentsyncstatus == 0) {
+    $statustext = "Enable Content Sync";
+    $url = new moodle_url("/admin/tool/foundrysync/manage.php",
+                array('action' => 'changecontentsyncstatus', 'contentsyncstatus' => 1));
     echo ' ' . html_writer::link($url,  $statustext);
     echo $OUTPUT->footer();
     exit();

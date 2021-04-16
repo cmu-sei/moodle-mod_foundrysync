@@ -585,7 +585,7 @@ class check_content extends \core\task\scheduled_task {
     public function execute() {
         global $DB;
 
-        if (!get_config('tool_foundrysync', 'enable')) {
+        if (!get_config('tool_foundrysync', 'enablecontentsync')) {
             echo "tool_foundrysync disabled in config<br>";
             return; // The tool is disabled. Nothing to do.
         }
@@ -1056,7 +1056,7 @@ class check_content extends \core\task\scheduled_task {
                 $this->store_playlist_in_db($course->id, $playlist->globalId, $course->fullname, $playlist->id);
             }
         }
-        // get all content in course and make sure they exist in foundry 
+        // get all content in course and make sure they exist in foundry
         $coursemodules =  $DB->get_records_sql("SELECT * from {course_modules} WHERE course = ?", array($course->id));
         if (!$coursemodules) {
             echo "no course modules found for course id $record->courseid<br>";
@@ -1159,7 +1159,7 @@ class check_content extends \core\task\scheduled_task {
         }
         echo "content name \"$content->name\"<br>";
 
-        // get module info 
+        // get module info
         // TODO should check if the module png file exists before using it
         $moodlelogourl = $CFG->wwwroot . "/pix/moodlelogo.svg";
         $logourl = $CFG->wwwroot . "/mod/$moduletype->name/pix/icon.svg";
