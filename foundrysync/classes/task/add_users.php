@@ -57,7 +57,7 @@ class add_users extends \core\task\scheduled_task {
     public function setup() {
         global $SITE;
 
-        $issuerid = get_config('tool_foundrysync', 'issuerid');
+        $issuerid = get_config('tool_foundrysync', 'usersyncissuerid');
         if (!$issuerid) {
                 echo "add_user does not have issuerid set<br>";
             return;
@@ -76,22 +76,11 @@ class add_users extends \core\task\scheduled_task {
         $this->sitename = $SITE->shortname;
         $this->clientid = $this->systemauth->get_clientid();
 
-        $this->interval = get_config('tool_foundrysync', 'interval');
+        $this->interval = get_config('tool_foundrysync', 'usersyncinterval');
         if (!$this->interval) {
             $this->interval = 15;
         }
         $this->course = 0;
-    }
-
-    /* http://php.net/manual/en/function.com-create-guid.php */
-    public function guidv4() {
-        if (function_exists('com_create_guid') === true)
-            return trim(com_create_guid(), '{}');
-
-        $data = openssl_random_pseudo_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     /* queries for created/updated/deleted content */
@@ -109,10 +98,10 @@ class add_users extends \core\task\scheduled_task {
         $time = time() - $this->interval * 60;
 
         // get identity server users
-        // $identity_users = $DB->get_records_sql("SELECT * from {logstore_standard_log} WHERE eventname REGEXP 'course_(created|updated|deleted)' AND timecreated >= ?", array($time));
-        // echo count($identity_users) . " course(s) updated during the last $this->interval minutes<br>";
+        $identity_users = $DB->get_records_sql("SELECT * from {logstore_standard_log} WHERE eventname REGEXP 'course_(created|updated|deleted)' AND timecreated >= ?", array($time));
+        echo count($identity_users) . " course(s) updated during the last $this->interval minutes<br>";
 
-        // $this->process_users($identity_users);
+        $this->process_users($identity_users);
         echo "<br>DONE PROCESSING USERS<br>";
     }
 
