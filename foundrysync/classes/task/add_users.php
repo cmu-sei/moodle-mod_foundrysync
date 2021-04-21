@@ -43,7 +43,7 @@ require_once($CFG->dirroot.'/admin/user/lib.php');
 class add_users extends \core\task\scheduled_task {
 
     protected $systemauth;
-    protected $sitename;
+    protected $issuer;
 
     /**
      * Get a descriptive name for this task.
@@ -55,7 +55,6 @@ class add_users extends \core\task\scheduled_task {
     }
 
     public function setup() {
-        global $SITE;
 
         $issuerid = get_config('tool_foundrysync', 'usersyncissuerid');
         if (!$issuerid) {
@@ -64,6 +63,7 @@ class add_users extends \core\task\scheduled_task {
         }
 
         $issuer = \core\oauth2\api::get_issuer($issuerid);
+        $this->issuer = $issuer;
         $this->systemauth = \core\oauth2\api::get_system_oauth_client($issuer);
         if ($this->systemauth === false) {
             $details = 'add_user cannot connect as system account';
@@ -72,42 +72,56 @@ class add_users extends \core\task\scheduled_task {
             return;
         }
 
-        /* TODO strip spaces */
-        $this->sitename = $SITE->shortname;
-        $this->clientid = $this->systemauth->get_clientid();
-
         $this->interval = get_config('tool_foundrysync', 'usersyncinterval');
         if (!$this->interval) {
             $this->interval = 15;
         }
-        $this->course = 0;
     }
 
     /* queries for created/updated/deleted content */
     public function execute() {
-        global $DB;
 
         if (!get_config('tool_foundrysync', 'enableusersync')) {
             echo "add_user is disabled in tool_foundrysync config<br>";
             return; // The tool is disabled. Nothing to do.
         }
 
+        // get the system client, base url and execution interval
         $this->setup();
 
-        // prepare query
-        $time = time() - $this->interval * 60;
-
-        // get identity server users
-        $identity_users = $DB->get_records_sql("SELECT * from {logstore_standard_log} WHERE eventname REGEXP 'course_(created|updated|deleted)' AND timecreated >= ?", array($time));
-        echo count($identity_users) . " course(s) updated during the last $this->interval minutes<br>";
+        // get recent identity server users
+        $identity_users = $this->get_recent_identity_users();
+        echo count($identity_users) . " user(s) created or modified during the last $this->interval minutes<br>";
 
         $this->process_users($identity_users);
         echo "<br>DONE PROCESSING USERS<br>";
     }
 
+    public function get_recent_identity_users() {
+
+        $isloggedin = $this->systemauth->is_logged_in();
+        $accesstoken = \core\oauth2\access_token::get_record(['issuerid' => $this->issuer->get('id')]);
+
+        $time = date(DATE_ATOM, (time() - $this->interval * 60 * 10000));  // interval is in minutes but we need seconds to 2021-04-21T11:12:13-04:00
+        $url = $this->issuer->get('baseurl') . '/api/accounts?Since=' . urlencode($time);
+        $response = $this->systemauth->get($url);
+        if (!$response) {
+            debugging("no response received by get_recent_identity_users for $url", DEBUG_DEVELOPER);
+        }
+        if ($this->systemauth->info['http_code']  !== 200) {
+            debugging('response code ' . $this->systemauth->info['http_code'] . " for $url", DEBUG_DEVELOPER);
+            return;
+        }
+        $r = json_decode($response);
+
+        if (!$r) {
+            debugging("could not find item by id", DEBUG_DEVELOPER);
+            return;
+        }
+        return $r;
+    }
+
     public function process_users($identity_users) {
-        global $DB, $CFG;
-        $data = array();
         $count = 0;
 
         foreach ($identity_users as $identity_user) {
