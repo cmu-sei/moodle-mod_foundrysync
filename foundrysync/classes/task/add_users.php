@@ -36,9 +36,11 @@ DM20-0198
 
 namespace tool_foundrysync\task;
 
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/admin/user/lib.php');
+require_once($CFG->dirroot.'/user/lib.php');
 
 class add_users extends \core\task\scheduled_task {
 
@@ -122,10 +124,52 @@ class add_users extends \core\task\scheduled_task {
     }
 
     public function process_users($identity_users) {
+        global $DB;
         $count = 0;
-
         foreach ($identity_users as $identity_user) {
             echo "#################### processing user " . $count++ . "<br>";
+            $moodle_user = new stdClass;
+            $moodle_user->auth = 'oauth2';
+            $moodle_user->mnethostid = 1;
+            $moodle_user->confirmed = 1;
+            $moodle_user->secret = 'autoconfirmed';
+            $moodle_user->idnumber = $identity_user->globalId;
+            $moodle_user->email = $identity_user->globalId . '@' . str_replace(':', '.', $this->issuer->get('name'));
+            foreach ($identity_user->properties as $property) {
+                switch ($property->key) {
+                    case 'username':
+                        $moodle_user->username = strtolower($property->value);
+                        break;
+                    case 'name':
+                        $nameparts = explode('.', $property->value);
+                        if (count($nameparts) > 1) {
+                            $moodle_user->firstname = $nameparts[0];
+                            $moodle_user->lastname = substr($property->value, strlen($nameparts[0]) + 1);
+                        } else {
+                            $nameparts = explode(' ', $property->value);
+                            $moodle_user->firstname = $nameparts[0];
+                            if (count($nameparts) > 1){
+                                $moodle_user->lastname = substr($property->value, strlen($nameparts[0]) + 1);
+                            } else {
+                                $moodle_user->lastname = '?';
+                            }
+                        }
+                        break;
+                    case 'email':
+                        $moodle_user->email = $property->value;
+                        break;
+                }
+            }
+            $noexistinguser = count($DB->get_records_list('user', 'username', array($moodle_user->username))) === 0;
+            if ($noexistinguser) {
+                $userid = user_create_user($moodle_user, false, false);
+                $link_params = array(
+                    'username' => $moodle_user->username,
+                    'email' => $moodle_user->email
+                );
+                \auth_oauth2\api::link_login($link_params, $this->issuer, $userid);
+                echo "Created user " . $userid . ": " . $moodle_user->firstname . ' ' . $moodle_user->lastname . ' (' . $moodle_user->email . ')<br>';
+            }
         }
     }
 
