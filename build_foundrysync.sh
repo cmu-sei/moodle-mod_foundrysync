@@ -16,6 +16,4 @@ fi
 echo old version $OLDVERSION
 echo new version $NEWVERSION
 sed -i "s/$OLDVERSION/$NEWVERSION/" foundrysync/version.php
-cd foundrysync
-zip -r ../tool_foundrysync_$NEWVERSION.zip .
-cd ..
+zip -r tool_foundrysync_$NEWVERSION.zip foundrysync
