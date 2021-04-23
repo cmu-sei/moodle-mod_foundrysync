@@ -50,41 +50,30 @@ $issuerid = optional_param('issuerid', '', PARAM_INT);
 $interval = optional_param('interval', '', PARAM_RAW);
 $usersyncstatus = optional_param('usersyncstatus', 0, PARAM_BOOL);
 $usersyncissuerid = optional_param('usersyncissuerid', '', PARAM_INT);
-$usersyncendpoint = optional_param('usersyncendpoint', '', PARAM_URL);
-$usersyncinterval = optional_param('usersyncinterval', '', PARAM_RAW);
 
 $PAGE->set_url($manageurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title("Manage Foundry Sync");
 $PAGE->set_heading("Foundry Sync Settings");
 
-// toggle status of the user sync.
 if (!empty($action) && $action == 'changeusersyncstatus') {
+    // toggle status of the user sync.
     set_config('enableusersync', $usersyncstatus, 'tool_foundrysync');
     redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
-} else if (!empty($action) && $action == 'changeusersyncvalues') {
-    if (!empty($action) && (!empty($usersyncendpoint))) {
-        set_config('usersyncendpoint', $usersyncendpoint, 'tool_foundrysync');
-    }
-    if (!empty($action) && (!empty($usersyncissuerid))) {
-        set_config('usersyncissuerid', $usersyncissuerid, 'tool_foundrysync');
-    }
-    /* query interval */
-    if (!empty($action) && (!empty($usersyncinterval))) {
-        set_config('usersyncinterval', $usersyncinterval, 'tool_foundrysync');
-    }
-    /* redirect and update */
-    redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
-}
-
-// toggle status of the content sync.
-if (!empty($action) && $action == 'changecontentsyncstatus') {
+} else if (!empty($action) && $action == 'changecontentsyncstatus') {
+    // toggle status of the content sync.
     set_config('enablecontentsync', $contentsyncstatus, 'tool_foundrysync');
     redirect(new moodle_url('/admin/tool/foundrysync/manage.php'));
 } else if (!empty($action) && $action == 'changevalues') {
+    /* user sync issuer ID */
+    if (!empty($action) && (!empty($usersyncissuerid))) {
+        set_config('usersyncissuerid', $usersyncissuerid, 'tool_foundrysync');
+    }
+    /* content sync endpoint */
     if (!empty($action) && (!empty($endpoint))) {
         set_config('endpoint', $endpoint, 'tool_foundrysync');
     }
+    /* content sync issuer ID */
     if (!empty($action) && (!empty($issuerid))) {
         set_config('issuerid', $issuerid, 'tool_foundrysync');
     }
@@ -104,8 +93,6 @@ $issuerid = get_config('tool_foundrysync', 'issuerid');
 $interval = get_config('tool_foundrysync', 'interval');
 $usersyncstatus = get_config('tool_foundrysync', 'enableusersync');
 $usersyncissuerid = get_config('tool_foundrysync', 'usersyncissuerid');
-$usersyncendpoint = get_config('tool_foundrysync', 'usersyncendpoint');
-$usersyncinterval = get_config('tool_foundrysync', 'usersyncinterval');
 
 $options = [];
 $issuers = core\oauth2\api::get_all_issuers();
@@ -114,68 +101,64 @@ foreach ($issuers as $issuer) {
 }
 
 echo "<br>\n";
+$output = html_writer::start_tag('form', array('method'=>'post', 'action'=>new moodle_url('/admin/tool/foundrysync/manage.php', array('action' => 'changevalues'))));
 
 // create link to toggle user sync
 if ($usersyncstatus == 1) {
-    $statustext = "Disable User Sync";
+    $statustext = "Disable User Sync from Identity Server";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
                 array('action' => 'changeusersyncstatus', 'usersyncstatus' => 0));
-    echo ' ' . html_writer::link($url,  $statustext);
-    echo "<br>\n";
-    echo "<br>\n";
-    $output = html_writer::start_tag('form', array('method'=>'post', 'action'=>new moodle_url('/admin/tool/foundrysync/manage.php', array('action' => 'changeusersyncvalues'))));
-    $output .= html_writer::tag('span', "Choose the OAUTH2 issuer to be used<br>");
+    $output .= ' ' . html_writer::link($url,  $statustext);
+    $output .= "<br>\n";
+    $output .= "<br>\n";
+    $output .= html_writer::tag('span', "Choose the OAUTH2 issuer to be used for Identity Server user sync<br>");
     $output .= html_writer::select($options, 'usersyncissuerid', $usersyncissuerid, false, array('id' => 'usersyncissuerid'));
     $output .= "<br>";
-    $output .= html_writer::tag('span', "Enter the interval to query, in minutes<br>");
-    $output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'usersyncinterval', 'value'=>$usersyncinterval));
-    $output .= "<br>";
-    /* add submit button */
-    $output .= html_writer::empty_tag('input', array('type' => 'submit', 'class' => 'btn btn-primary', 'value' =>"Submit"));
-    $output .= html_writer::end_tag('form');
-    echo $output;
 } else if ($usersyncstatus == 0) {
-    $statustext = "Enable User Sync";
+    $statustext = "Enable User Sync from Identity Server";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
                 array('action' => 'changeusersyncstatus', 'usersyncstatus' => 1));
-    echo ' ' . html_writer::link($url,  $statustext);
+    $output .= ' ' . html_writer::link($url,  $statustext);
 }
 
-echo "<br>\n";
-echo "<hr>\n";
+$output .= "<br>\n";
+$output .= "<hr>\n";
 
 // create link to toggle content sync
 if ($contentsyncstatus == 1) {
-    $statustext = "Disable Content Sync";
+    $statustext = "Disable Content Sync to Foundry";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
                 array('action' => 'changecontentsyncstatus', 'contentsyncstatus' => 0));
-    echo ' ' . html_writer::link($url,  $statustext);
+    $output .= ' ' . html_writer::link($url,  $statustext);
+    $output .= "<br>\n";
+    $output .= "<br>\n";
+
+    /* set endpoint */
+    $output .= html_writer::tag('span', "Enter the Foundry API's base URL (ie: https://api.foundry.com)<br>");
+    $output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'endpoint', 'value'=>$endpoint));
+    $output .= "<br>\n";
+    $output .= html_writer::tag('span', "Choose the OAUTH2 issuer to be used for Foundry content sync<br>");
+    $output .= html_writer::select($options, 'issuerid', $issuerid, false, array('id' => 'issuerid'));
+    $output .= "<br>\n";
+    /* TODO add publisher info*/
+    /* interval */
+    $output .= "<br>\n";
+    $output .= html_writer::tag('span', "Enter the interval to query, in minutes<br>");
+    $output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'interval', 'value'=>$interval));
 } else if ($contentsyncstatus == 0) {
-    $statustext = "Enable Content Sync";
+    $statustext = "Enable Content Sync to Foundry";
     $url = new moodle_url("/admin/tool/foundrysync/manage.php",
                 array('action' => 'changecontentsyncstatus', 'contentsyncstatus' => 1));
-    echo ' ' . html_writer::link($url,  $statustext);
-    echo $OUTPUT->footer();
-    exit();
+    $output .= ' ' . html_writer::link($url,  $statustext);
 }
 
-echo "<br>\n";
-echo "<br>\n";
-
-$output = html_writer::start_tag('form', array('method'=>'post', 'action'=>new moodle_url('/admin/tool/foundrysync/manage.php', array('action' => 'changevalues'))));
-/* set endpoint */
-$output .= html_writer::tag('span', "Enter the API's base URL (ie: https://api.foundry.com)<br>");
-$output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'endpoint', 'value'=>$endpoint));
-$output .= html_writer::tag('span', "Choose the OAUTH2 issuer to be used<br>");
-$output .= html_writer::select($options, 'issuerid', $issuerid, false, array('id' => 'issuerid'));
-$output .= "<br>";
-/* TODO add publisher info*/
-/* interval */
-$output .= html_writer::tag('span', "Enter the interval to query, in minutes<br>");
-$output .= html_writer::empty_tag('input', array('type'=>'text', 'class'=>'form-control', 'name'=>'interval', 'value'=>$interval));
-$output .= "<br>";
 /* add submit button */
-$output .= html_writer::empty_tag('input', array('type' => 'submit', 'class' => 'btn btn-primary', 'value' =>"Submit"));
+if ($contentsyncstatus == 1 || $usersyncstatus == 1) {
+    $output .= "<br>\n";
+    $output .= "<hr>\n";
+    $output .= html_writer::empty_tag('input', array('type' => 'submit', 'class' => 'btn btn-primary', 'value' =>"Submit"));
+}
+
 $output .= html_writer::end_tag('form');
 
 echo $output;
