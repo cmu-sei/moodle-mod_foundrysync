@@ -46,6 +46,7 @@ class add_users extends \core\task\scheduled_task {
 
     protected $systemauth;
     protected $issuer;
+    private $user_secret;
 
     /**
      * Get a descriptive name for this task.
@@ -64,6 +65,7 @@ class add_users extends \core\task\scheduled_task {
             return;
         }
 
+        $this->user_secret = 'issuer_' . $issuerid . '_auto';
         $issuer = \core\oauth2\api::get_issuer($issuerid);
         $this->issuer = $issuer;
         $this->systemauth = \core\oauth2\api::get_system_oauth_client($issuer);
@@ -72,11 +74,6 @@ class add_users extends \core\task\scheduled_task {
             echo "$details<br>";
             throw new \Exception($details);
             return;
-        }
-
-        $this->interval = get_config('tool_foundrysync', 'usersyncinterval');
-        if (!$this->interval) {
-            $this->interval = 15;
         }
     }
 
@@ -93,18 +90,20 @@ class add_users extends \core\task\scheduled_task {
 
         // get recent identity server users
         $identity_users = $this->get_recent_identity_users();
-        echo count($identity_users) . " user(s) created or modified during the last $this->interval minutes<br>";
 
         $this->process_users($identity_users);
         echo "<br>DONE PROCESSING USERS<br>";
     }
 
     public function get_recent_identity_users() {
+        global $DB;
 
-        $isloggedin = $this->systemauth->is_logged_in();
-        $accesstoken = \core\oauth2\access_token::get_record(['issuerid' => $this->issuer->get('id')]);
-
-        $time = date(DATE_ATOM, (time() - $this->interval * 60 * 10000));  // interval is in minutes but we need seconds to 2021-04-21T11:12:13-04:00
+        $time = date(DATE_ATOM, (time() - 60 * 60 * 24 * 30));  // if this is the first time users have been synced, go back 30 days
+        $last_synced_user = $DB->get_record_sql(
+            "SELECT timecreated FROM mdl_user where secret='". $this->user_secret . "' order by id desc limit 1");
+        if (!empty($last_synced_user)) {
+            $time = date(DATE_ATOM, $last_synced_user->timecreated);
+        }
         $url = $this->issuer->get('baseurl') . '/api/accounts?Since=' . urlencode($time);
         $response = $this->systemauth->get($url);
         if (!$response) {
@@ -117,9 +116,12 @@ class add_users extends \core\task\scheduled_task {
         $r = json_decode($response);
 
         if (!$r) {
-            debugging("could not find item by id", DEBUG_DEVELOPER);
+            debugging("could not find Identity Server users", DEBUG_DEVELOPER);
             return;
         }
+
+        echo count($r) . " new or modified Identity Server user(s) found since " . $time . " <br>";
+
         return $r;
     }
 
@@ -132,7 +134,7 @@ class add_users extends \core\task\scheduled_task {
             $moodle_user->auth = 'oauth2';
             $moodle_user->mnethostid = 1;
             $moodle_user->confirmed = 1;
-            $moodle_user->secret = 'autoconfirmed';
+            $moodle_user->secret = $this->user_secret;
             $moodle_user->idnumber = $identity_user->globalId;
             $moodle_user->email = $identity_user->globalId . '@' . str_replace(':', '.', $this->issuer->get('name'));
             foreach ($identity_user->properties as $property) {
