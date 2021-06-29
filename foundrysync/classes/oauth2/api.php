@@ -13,7 +13,8 @@ class api extends \core\oauth2\api {
         $issuer->create();
 
         // Perform service discovery.
-        self::discover_endpoints($issuer);
+        $classname = self::get_service_classname($issuer->get('servicetype'));
+        $classname::discover_endpoints($issuer);
         self::guess_image($issuer);
         return $issuer;
     }
@@ -25,7 +26,8 @@ class api extends \core\oauth2\api {
         $issuer->update();
 
         // Perform service discovery.
-        self::discover_endpoints($issuer);
+        $classname = self::get_service_classname($issuer->get('servicetype'));
+        $classname::discover_endpoints($issuer);
         self::guess_image($issuer);
         return $issuer;
     }
