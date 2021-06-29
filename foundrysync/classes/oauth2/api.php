@@ -4,7 +4,9 @@ namespace tool_foundrysync\oauth2;
 
 class api extends \core\oauth2\api {
 
-//public static function discover_endpoints($issuer) {}
+    public static function discover_endpoints($issuer) {
+        // TODO - decide if this should be implemented
+    }
 
     public static function create_issuer($data) {
         $issuer = new \core\oauth2\issuer(0, $data);
